@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:aishop/icons/icons.dart';
 
 //model for modal pop up
 //displays image , price, name, description

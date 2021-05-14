@@ -1,32 +1,38 @@
-import 'package:aishop/components/searchservice.dart';
-import 'package:flutter/material.dart';
+
 import 'package:aishop/widgets/modal_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
-//model for one item
-//take product details as parameters and return and clickable countainer that displays the image & price of product
-class ProductCard extends StatelessWidget {
-  final String imgUrl;
-  final String name;
-  final String description;
-  final String price;
+class SearchService{
 
-  ProductCard(
-    this.imgUrl,
-    this.name,
-    this.description,
-    this.price,
-  );
-  @override
-  Widget build(BuildContext context) {
+  searchByName(String searchField) {
+    return FirebaseFirestore.instance
+        .collection('Products')
+        .where('name', isGreaterThan: searchField)
+        .get();
+  }
+
+  increment(String itemname) async {
+    FirebaseFirestore.instance.collection('Products')
+        .where('name', isEqualTo: itemname)
+        .get()
+        .then((querySnapshot) {
+      querySnapshot.docs.forEach((documentSnapshot) {
+        documentSnapshot.reference.update({"clicks" : FieldValue.increment(1)});
+      });
+    });
+  }
+
+  Widget buildResultCard(BuildContext context,data) {
     return InkWell(
         onTap: () {
-          //on tap modal pop up
-          Modal(context, imgUrl, name, description, price);
-          SearchService().increment(name);
+          increment(data['name']);
+          Modal(context, data['url'], data['name'], data['description'], data['price']);
         },
         splashColor: Colors.white30,
         customBorder:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
             padding: const EdgeInsets.all(10.0),
             child: Container(
@@ -50,17 +56,17 @@ class ProductCard extends StatelessWidget {
                       ),
                       //image from db
                       Image.network(
-                        imgUrl,
+                        data['url'],
                         width: 180,
-                        height: 280,
-                        fit: BoxFit.fitWidth,
+                        height: 200,
+                        fit: BoxFit.cover,
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       //text
                       Text(
-                        "Name: " + name,
+                        data['name'],
                         style: TextStyle(
                             fontSize: 15, fontWeight: FontWeight.bold),
                       ),
@@ -68,7 +74,7 @@ class ProductCard extends StatelessWidget {
                         height: 5,
                       ),
                       //price
-                      Text("Price: R " + price,
+                      Text("Price: R " + data['price'],
                           style: TextStyle(
                               fontSize: 15, fontWeight: FontWeight.bold)),
                     ],
